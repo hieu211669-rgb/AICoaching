@@ -1,15 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Menu, AlertCircle, TrendingUp, Save, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { AlertCircle, TrendingUp, Save, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSettings } from '@/context/SettingsContext';
+import TopAppBar from '@/components/TopAppBar';
 
-export default function AIRatingPage() {
+type ApiExercise = {
+  id: string;
+  exerciseName: string;
+  referenceVisual: string;
+};
+
+function AIRatingContent() {
   const { settings } = useSettings();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const exerciseId = searchParams.get('id');
+  
+  const [exercise, setExercise] = useState<ApiExercise | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!exerciseId) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchExercise = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/api/exercises/${exerciseId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setExercise(data);
+        }
+      } catch (err) {
+        console.error("Error fetching exercise for rating:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchExercise();
+  }, [exerciseId]);
 
   const handleSaveResults = async () => {
     setSaving(true);
@@ -30,7 +66,7 @@ export default function AIRatingPage() {
         },
         body: JSON.stringify({
           user_id: user.id,
-          exercise_id: 'barbell_squat_001', // Dummy ID for current session
+          exercise_id: exerciseId || 'unknown_exercise',
           completed_sets: 1,
           completed_reps: 10,
           weight_used: 80,
@@ -94,36 +130,17 @@ export default function AIRatingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-28 transition-colors duration-500">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 border-b border-surface-border">
-        <div className="flex items-center gap-4">
-          <button className="active:scale-95 duration-200 text-primary">
-            <Menu size={24} />
-          </button>
-          <h1 className="text-xl font-black text-primary tracking-tighter uppercase font-display">
-            VOLT KINETIC
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-full overflow-hidden border border-surface-border">
-            <img
-              alt="User profile avatar"
-              className="w-full h-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAv1fXGoBKDu0Dj0XAQZCxertpDUac77fJoT5tSmddmPYL52RD4_W6Jtj1Ylc4-QbolQaJjxOUUG-YZKolajs_2dqLLaiDV9n51BYKtiApTGqNTSnwHMnMvXAW9uolHYjSOQ6Ntqab2CwG0sbPAZSdbYdPbLhdQB8-JHDvUcJkYTqnaarlFbAo8k41xBp0HidozopPJdgZmTwB8b8ZmzYNEcOg3fGiwSNqv5RcV4n2OTy0xTYcgOewdR3GjZAybwkfQhg1O5q-OfMTk"
-            />
-          </div>
-        </div>
-      </header>
+      <TopAppBar title="AI FORM ANALYSIS" />
 
-      <main className="pt-16 pb-24 min-h-screen px-4 md:px-8 max-w-7xl mx-auto space-y-8">
+      <main className="mx-auto min-h-screen max-w-7xl space-y-8 px-4 pb-24 pt-16 sm:px-6 md:px-8 md:pb-12">
         {/* Hero Section: AI Video Analysis */}
         <section className="mt-4 relative group">
           <div className="relative w-full aspect-video md:aspect-[21/9] bg-surface rounded-xl overflow-hidden ring-1 ring-surface-border shadow-2xl transition-colors duration-500">
             <div className="absolute inset-0 z-0">
               <img
                 className="w-full h-full object-cover opacity-80 grayscale group-hover:grayscale-0 transition-all duration-700"
-                alt="Muscular person performing a deep squat"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgGRg282TyRBnpUsmFna1slvR0lOaTJEE8pB-HMB5ziDigxCsqCeBR7j21Ib4H9cHEN547IkO4EaP6xOqp3lPQgj9rHqffAXLMi4ca8IeQCnfYtqUpba6e8xyqjOnQDniE_U3KkynDJ2kKDiqG_KtCsONiqW27s4b6kGfIcWLhKnMJnLT0oAl9nfwlFi6OPYeYYhPfURJBFRKyg355LVHgUmH7uwKmDmr8pS9iaYPI1YCCLJQaO8St8YYquX_eTP5LBv8Cu8NMOQU"
+                alt={exercise?.exerciseName || "Exercise Analysis"}
+                src={exercise?.referenceVisual || "https://lh3.googleusercontent.com/aida-public/AB6AXuAgGRg282TyRBnpUsmFna1slvR0lOaTJEE8pB-HMB5ziDigxCsqCeBR7j21Ib4H9cHEN547IkO4EaP6xOqp3lPQgj9rHqffAXLMi4ca8IeQCnfYtqUpba6e8xyqjOnQDniE_U3KkynDJ2kKDiqG_KtCsONiqW27s4b6kGfIcWLhKnMJnLT0oAl9nfwlFi6OPYeYYhPfURJBFRKyg355LVHgUmH7uwKmDmr8pS9iaYPI1YCCLJQaO8St8YYquX_eTP5LBv8Cu8NMOQU"}
               />
               <div className="absolute inset-0 bg-black/20"></div>
             </div>
@@ -157,48 +174,26 @@ export default function AIRatingPage() {
                   <circle cx="440" cy="460" r="4" />
                   <circle cx="560" cy="460" r="4" />
                 </g>
-                <line
-                  className="stroke-primary/40 stroke-2"
-                  x1="0"
-                  x2="1000"
-                  y1="0"
-                  y2="0"
-                >
-                  <animate
-                    attributeName="y1"
-                    dur="3s"
-                    from="0"
-                    repeatCount="indefinite"
-                    to="500"
-                  />
-                  <animate
-                    attributeName="y2"
-                    dur="3s"
-                    from="0"
-                    repeatCount="indefinite"
-                    to="500"
-                  />
-                </line>
               </svg>
             </div>
 
             <div className="absolute top-4 left-4 bg-background/60 backdrop-blur-md px-3 py-1 rounded flex items-center gap-2 border border-primary/20">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
               <span className="text-primary text-[10px] font-bold uppercase tracking-widest">
-                AI Live Analysis
+                AI Live Analysis • {exercise?.exerciseName}
               </span>
             </div>
           </div>
         </section>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <div className="md:col-span-4 bg-surface p-8 rounded-xl flex flex-col items-center justify-center relative overflow-hidden ring-1 ring-surface-border transition-colors duration-500">
+          <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-surface p-6 ring-1 ring-surface-border transition-colors duration-500 sm:p-8 md:col-span-4">
             <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
             <h3 className="text-foreground/40 uppercase text-xs font-bold tracking-[0.2em] mb-4">
               Form Score
             </h3>
             <div className="relative">
-              <svg className="w-48 h-48 -rotate-90">
+              <svg className="h-40 w-40 -rotate-90 sm:h-48 sm:w-48">
                 <circle
                   className="text-foreground/5"
                   cx="96"
@@ -238,14 +233,14 @@ export default function AIRatingPage() {
             </div>
           </div>
 
-          <div className="md:col-span-8 bg-surface p-8 rounded-xl ring-1 ring-surface-border flex flex-col transition-colors duration-500">
-            <div className="flex justify-between items-end mb-8">
+          <div className="flex flex-col rounded-xl bg-surface p-5 ring-1 ring-surface-border transition-colors duration-500 sm:p-8 md:col-span-8">
+            <div className="mb-8 flex items-end justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-black text-foreground tracking-tight font-display uppercase italic">
+                <h2 className="font-display text-2xl font-black uppercase italic tracking-tight text-foreground sm:text-3xl">
                   ANALYSIS FEEDBACK
                 </h2>
                 <p className="text-foreground/40 text-sm mt-1 uppercase font-bold tracking-tight">
-                  3 critical points identified during the Squat session.
+                  3 critical points identified during the {exercise?.exerciseName || 'session'}.
                 </p>
               </div>
               <AlertCircle size={40} className="text-tertiary" />
@@ -254,7 +249,7 @@ export default function AIRatingPage() {
               {corrections.map((correction) => (
                 <div
                   key={correction.id}
-                  className="flex items-center gap-6 p-4 bg-background border border-surface-border rounded-lg hover:bg-surface-hover transition-colors cursor-default"
+                  className="flex cursor-default flex-col gap-4 rounded-lg border border-surface-border bg-background p-4 transition-colors hover:bg-surface-hover sm:flex-row sm:items-center sm:gap-6"
                 >
                   <div
                     className={`w-12 h-12 flex items-center justify-center ${correction.iconBg} rounded border ${correction.iconBorder}`}
@@ -263,7 +258,7 @@ export default function AIRatingPage() {
                       {correction.icon}
                     </span>
                   </div>
-                  <div className="flex-grow">
+                  <div className="min-w-0 flex-grow">
                     <h4 className="text-lg font-black text-foreground uppercase leading-none font-display tracking-tight">
                       {correction.title}
                     </h4>
@@ -272,7 +267,7 @@ export default function AIRatingPage() {
                     </p>
                   </div>
                   <div
-                    className={`${correction.numberColor} font-black text-2xl opacity-20 font-display`}
+                    className={`${correction.numberColor} self-end font-display text-2xl font-black opacity-20 sm:self-auto`}
                   >
                     {correction.number}
                   </div>
@@ -320,5 +315,13 @@ export default function AIRatingPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AIRatingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AIRatingContent />
+    </Suspense>
   );
 }

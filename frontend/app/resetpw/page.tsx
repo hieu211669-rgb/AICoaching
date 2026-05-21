@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
       {/* Top Navigation Shell */}
-      <nav className="bg-[#0e0e0e] text-[#f4ffc6] flex items-center justify-between px-6 py-4 w-full h-16 fixed top-0 z-50">
+      <nav className="fixed top-0 z-50 flex h-16 w-full items-center justify-between bg-[#0e0e0e] px-4 py-4 text-[#f4ffc6] sm:px-6">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
@@ -70,17 +70,17 @@ export default function ResetPasswordPage() {
             SECURITY
           </h1>
         </div>
-        <div className="font-display font-black text-[#f4ffc6] italic">
+        <div className="hidden font-display font-black italic text-[#f4ffc6] sm:block">
           VOLT KINETIC
         </div>
       </nav>
 
       {/* Main Content Canvas */}
-      <main className="min-h-screen pt-24 pb-32 px-6 kinetic-bg relative overflow-hidden">
+      <main className="kinetic-bg relative min-h-screen overflow-hidden px-4 pb-32 pt-24 sm:px-6">
         {/* Background Graphic */}
         <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
           <img
-            className="absolute -right-20 top-20 w-3/4 grayscale mix-blend-screen"
+            className="absolute -right-40 top-20 w-[700px] max-w-none grayscale mix-blend-screen sm:-right-20 sm:w-3/4"
             alt="abstract double exposure of human muscular anatomy and flowing kinetic energy lines in a dark technical style"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2otzGU3nEL-Edi4VbpdhEwTRglOuypUe7xcFtY-gipp8Y6o9rBBZJZzALiEXJdW5kpEhORLRxP8vE1HFkPzGGcO0qpBLU8xoyK8oM_Vc9YTeDswIXejf3EjONAnonnXnZae9Il9LPWNvK9TgY3Y-YoWMBn3iYc5A_OjfGt271ZkNvb-7a8qCdF0iB4ugzyIK_IghpURIIzASyXx-mmtSrMXelmJascMhwl6lmoEwZuM0Im5T76dKemgYL8gz9vaM76ZAk2klifKbp"
           />
@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
         <div className="max-w-md mx-auto relative z-10">
           {/* Header Section */}
           <header className="mb-12">
-            <h2 className="font-display text-4xl font-black leading-none tracking-tight mb-2">
+            <h2 className="font-display mb-2 text-3xl font-black leading-none tracking-tight sm:text-4xl">
               CREATE NEW <br />
               <span className="text-primary italic">PASSWORD</span>
             </h2>

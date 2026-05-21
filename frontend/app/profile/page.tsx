@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
-  ArrowLeft, 
-  Settings, 
   Dumbbell, 
   Activity, 
-  User, 
   History,
   Flame,
-  LayoutDashboard
+  LogOut,
+  User as UserIcon
 } from 'lucide-react';
+import TopAppBar from '@/components/TopAppBar';
 
 const profileImage =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuAb1SNOsecnWphr_FzRQddO3y-GfWLFURLwN0xEj4tzEP6RJGP7NTtkiDpyfom0btq3YmzYS4OhM33BhAdtXp3zjhLdTffXL9JvqDNR3ZABaaOfc9AihO9qRM5dHEDyZHBYOHACc0top6qGb6Wvc8eO-C-KJPsrdEM9qZNYwi_GXZNLyuAh80cHGYQkosHPjEzntte864uGiEOAMkm4F8hG-afAtKiG9ueZIvyXWMcbfZ_UZn27YfXR__l-aTjGYz5pM1qY5Uvc-ylg';
@@ -43,18 +43,16 @@ const trainingHistory = [
   },
 ];
 
-
-const bottomNavItems = [
-  { icon: <Dumbbell size={24} />, label: 'TRAIN', active: false },
-  { icon: <LayoutDashboard size={24} />, label: 'STATS', active: false },
-  { icon: <User size={24} />, label: 'PROFILE', active: true },
-  { icon: <Settings size={24} />, label: 'GEAR', active: false },
-];
-
 export default function ProfilePage() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState({ workoutsCompleted: 0, streak: 0 });
   const [loading, setLoading] = useState(true);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -65,7 +63,10 @@ export default function ProfilePage() {
         fetchUserData(userData.id);
       } catch (e) {
         console.error('Failed to parse user data:', e);
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -107,41 +108,53 @@ export default function ProfilePage() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-primary flex items-center justify-center font-display uppercase tracking-widest">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background text-on-background">
+        <TopAppBar title="ATHLETE_PROFILE" />
+        <main className="flex flex-col items-center justify-center pt-48 px-4 text-center">
+           <div className="h-24 w-24 rounded-full bg-surface-container-highest flex items-center justify-center mb-6 border-2 border-primary/20">
+              <UserIcon size={48} className="text-zinc-500" />
+           </div>
+           <h2 className="text-3xl font-black uppercase tracking-tighter mb-4 font-display">Access Restricted</h2>
+           <p className="text-zinc-500 mb-8 max-w-xs">Please login to access your personalized athlete profile and training history.</p>
+           <Link href="/login" className="bg-primary text-black px-10 py-4 rounded-lg font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/20 active:scale-95 transition-transform">
+             Login / Sign Up
+           </Link>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24 text-on-background">
-      <header className="fixed top-0 z-50 flex w-full items-center justify-between bg-background px-6 py-4">
-        <div className="flex items-center gap-4">
-          <button aria-label="Go back" className="flex items-center text-primary transition-colors hover:text-primary-dim" type="button">
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="font-headline font-bold uppercase tracking-tighter text-primary">ATHLETE_PROFILE</h1>
-        </div>
-        <div className="font-headline text-xl font-black italic text-primary">VOLT</div>
-      </header>
+      <TopAppBar title="ATHLETE_PROFILE" />
 
-      <div className="fixed top-[60px] z-50 h-px w-full bg-surface-container-low" />
+      <div className="fixed left-0 right-0 top-[60px] z-50 h-px bg-surface-container-low" />
 
-      <main className="mx-auto max-w-2xl px-6 pt-24">
+      <main className="mx-auto max-w-4xl px-4 pt-24 sm:px-6">
         <section className="relative mb-12 flex flex-col items-center">
           <div className="relative mb-6">
             <div className="h-32 w-32 overflow-hidden rounded-lg border-2 border-primary bg-background p-1">
               <img
                 alt="Athlete Profile"
                 className="h-full w-full rounded-lg object-cover"
-                src={user?.avatar || profileImage}
+                src={user?.avatar_url || profileImage}
               />
-            </div>
-            <div className="absolute -bottom-2 -right-2 bg-primary px-3 py-1 font-headline text-xs font-bold uppercase italic tracking-widest text-on-primary">
-              LVL 42
             </div>
           </div>
 
           <h2 className="mb-1 font-headline text-4xl font-extrabold uppercase tracking-tighter text-on-background">
             {user?.full_name || 'Elite Athlete'}
           </h2>
-          <p className="mb-8 font-headline text-sm font-bold tracking-[0.2em] text-primary">
-            {user?.role === 'admin' ? 'ADMIN' : 'ELITE ATHLETE'} - LVL 42
-          </p>
 
           <div className="flex w-full gap-4">
             <Link
@@ -150,12 +163,19 @@ export default function ProfilePage() {
             >
               EDIT PROFILE
             </Link>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-6 py-4 font-headline text-sm font-black uppercase tracking-widest text-red-500 transition-all hover:bg-red-500/20 active:scale-95"
+            >
+              <LogOut size={16} />
+              SIGN OUT
+            </button>
           </div>
         </section>
 
         <section className="mb-12">
           <h3 className="mb-4 font-headline text-xs font-bold uppercase tracking-widest text-zinc-500">Core Metrics</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {coreMetrics.map((metric) => (
               <div
                 key={metric.label}
@@ -179,7 +199,7 @@ export default function ProfilePage() {
 
           <div className="space-y-3">
             {trainingHistory.map((activity, idx) => (
-              <div key={idx} className="flex items-center gap-4 rounded-lg bg-surface-container-low p-4">
+              <div key={idx} className="flex items-center gap-3 rounded-lg bg-surface-container-low p-4 sm:gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded bg-surface-container-highest">
                   {activity.icon}
                 </div>
@@ -197,20 +217,6 @@ export default function ProfilePage() {
         </section>
       </main>
 
-      <nav className="fixed bottom-0 left-0 z-50 flex h-20 w-full items-center justify-around bg-surface-container-low/90 px-4 pb-4 backdrop-blur-md">
-        {bottomNavItems.map((item) => (
-          <button
-            key={item.label}
-            className={`flex flex-col items-center justify-center transition-colors hover:text-zinc-200 ${
-              item.active ? 'scale-110 text-primary' : 'text-zinc-600'
-            }`}
-            type="button"
-          >
-            {item.icon}
-            <span className="font-headline text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }

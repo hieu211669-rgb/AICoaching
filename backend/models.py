@@ -44,6 +44,7 @@ class VideoModel(BaseModel):
     duration: str
     intensity: Literal['Low', 'Medium', 'High', 'Expert']
     focus: str
+    focus_muscle_ids: List[PyObjectId] = Field(default_factory=list)
     date: datetime = Field(default_factory=datetime.now)
 
     class Config:
@@ -74,6 +75,7 @@ class UserBase(BaseModel):
     goal: Optional[str] = None
     experience_level: Optional[str] = None
     activity_level: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 class UserIn(UserBase):
     password: str

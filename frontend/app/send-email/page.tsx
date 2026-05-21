@@ -46,7 +46,7 @@ function ForgotPasswordContent() {
   return (
     <div className="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary min-h-screen flex flex-col overflow-x-hidden">
       {/* TopAppBar */}
-      <header className="bg-[#0e0e0e] top-0 w-full h-16 flex items-center justify-between px-6 py-4 z-50">
+      <header className="top-0 z-50 flex h-16 w-full items-center justify-between bg-[#0e0e0e] px-4 py-4 sm:px-6">
         <div className="flex items-center gap-4">
           <Link href="/login" className="hover:bg-white/10 transition-all duration-300 active:scale-95 p-2 rounded-lg">
             <span className="material-symbols-outlined text-[#f4ffc6]">arrow_back</span>
@@ -55,11 +55,11 @@ function ForgotPasswordContent() {
             FORGOT PASSWORD
           </h1>
         </div>
-        <div className="font-headline text-[#f4ffc6] font-black italic tracking-tighter text-xl">KINETIC</div>
+        <div className="hidden font-headline text-xl font-black italic tracking-tighter text-[#f4ffc6] sm:block">KINETIC</div>
       </header>
 
       {/* Main Content Canvas */}
-      <main className="flex-grow flex flex-col items-center justify-center relative px-6 py-20">
+      <main className="relative flex flex-grow flex-col items-center justify-center px-4 py-16 sm:px-6 sm:py-20">
         {/* Abstract Performance Background Element */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px]"></div>
@@ -69,18 +69,18 @@ function ForgotPasswordContent() {
         <div className="w-full max-w-xl relative z-10">
           {/* Header Section */}
           <div className="mb-12 md:mb-16">
-            <h2 className="font-display text-5xl md:text-7xl font-black tracking-tighter leading-none mb-6 text-on-surface">
+            <h2 className="font-display mb-6 text-4xl font-black leading-none tracking-tighter text-on-surface sm:text-5xl md:text-7xl">
               RECOVER YOUR <br/>
               <span className="text-primary italic">ACCESS.</span>
             </h2>
-            <p className="font-body text-on-surface-variant text-lg md:text-xl max-w-md leading-relaxed border-l-2 border-primary pl-6">
+            <p className="max-w-md border-l-2 border-primary pl-4 font-body text-base leading-relaxed text-on-surface-variant sm:pl-6 md:text-xl">
               Enter your email address and we'll send you a secure link to reset your password.
             </p>
           </div>
 
           {/* Input Form Section */}
           <section className="bg-surface-container-low p-1 border-outline-variant/10 rounded-lg">
-            <div className="bg-background p-8 md:p-10 rounded-sm">
+            <div className="rounded-sm bg-background p-5 sm:p-8 md:p-10">
               <form className="space-y-8" onSubmit={handleSendEmail}>
                 {error && (
                   <div className="p-4 bg-error-container/20 border border-error/30 rounded-md">
@@ -138,8 +138,8 @@ function ForgotPasswordContent() {
           </section>
 
           {/* Information Box */}
-          <div className="mt-10 bg-surface-container-low/50 p-6 rounded-lg border border-outline-variant/10">
-            <div className="flex gap-4">
+          <div className="mt-10 rounded-lg border border-outline-variant/10 bg-surface-container-low/50 p-5 sm:p-6">
+            <div className="flex gap-3 sm:gap-4">
               <span className="material-symbols-outlined text-primary text-2xl flex-shrink-0">info</span>
               <div>
                 <h3 className="font-headline text-sm font-bold text-on-surface mb-2 uppercase tracking-wide">What happens next?</h3>

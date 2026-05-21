@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import TopAppBar from '@/components/TopAppBar';
 
 // We can't use 'fs' in a client component. 
 // In a real app, this would be an API call or a Server Action.
@@ -8,8 +9,10 @@ import React, { useState, useEffect } from 'react';
 
 type ApiVideo = {
   id?: string;
+  _id?: string;
   title?: string;
   focus?: string;
+  focus_muscle_ids?: string[];
   views?: number | string;
   duration?: string;
   intensity?: string;
@@ -26,6 +29,7 @@ type TutorialVideo = {
   id: string;
   title: string;
   coach: string;
+  focus_muscle_ids: string[];
   viewCount: number;
   views: string;
   duration: string;
@@ -65,8 +69,9 @@ const parseCreatedAt = (video: ApiVideo) => {
     }
   }
 
-  if (video.id && /^[a-f\d]{24}$/i.test(video.id)) {
-    return parseInt(video.id.slice(0, 8), 16) * 1000;
+  const id = video.id || video._id;
+  if (id && /^[a-f\d]{24}$/i.test(id)) {
+    return parseInt(id.slice(0, 8), 16) * 1000;
   }
 
   return 0;
@@ -107,15 +112,17 @@ export default function Home() {
               const viewCount = parseViews(v.views);
               const thumbnail = v.thumbnail || v.thumbnail_url;
               const videoSrc = v.url || v.video_url;
+              const id = v.id || v._id;
 
-              if (!v.title || !thumbnail || !videoSrc) {
+              if (!v.title || !thumbnail || !videoSrc || !id) {
                 return null;
               }
 
               return {
-                id: v.id || v.title,
+                id,
                 title: v.title,
                 coach: v.focus || 'Coach AI',
+                focus_muscle_ids: v.focus_muscle_ids || [],
                 viewCount,
                 views: formatViews(viewCount),
                 duration: v.duration || 'HD',
@@ -165,28 +172,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 border-b border-surface-border">
-        <button className="active:scale-95 duration-200 text-primary">
-          <span className="material-symbols-outlined">menu</span>
-        </button>
-        <h1 className="text-xl font-black text-primary tracking-[-0.02em] font-display uppercase">
-          VOLT KINETIC
-        </h1>
-        <div className="h-8 w-8 rounded-full overflow-hidden border border-primary/20 bg-surface">
-          <img
-            alt="User profile avatar"
-            className="h-full w-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxpbkDrkQZyqvuWjQcqWXOYLyNOvTqqpgMEuTB34x_vEEKE5St7gcdOAuozEQRBtee-rmaaqXPYdOJPJ_-Z_5DQ48GQGtf2M0Sp9Uu3JN3WvDYT783Of56veNHC474vWgxf9KQm5i9ag0c_ulq4QAK48KVO_DX05vkuqHhgGpj2dsS-X9XyUafQehBj1DBgohpIdQ_w77aa5RJ1NRQ71Nd_GV-aXH4u2-xOJBrfhyeVqVJQw7s_0SCzFZZCmWq8GraOWi77Jl3uN8h"
-          />
-        </div>
-      </header>
+      <TopAppBar />
 
-      <main className="pt-20 pb-28 px-6 max-w-5xl mx-auto space-y-10">
+      <main className="mx-auto max-w-5xl space-y-10 px-4 pb-28 pt-20 sm:px-6 md:pb-12">
         {/* Welcome Section */}
         <section className="relative">
           <div className="absolute -left-12 top-0 opacity-10 pointer-events-none select-none">
-            <span className="font-display font-black text-[120px] leading-none uppercase tracking-tighter text-foreground">
+            <span className="font-display text-[72px] font-black leading-none uppercase tracking-tighter text-foreground sm:text-[120px]">
               ELITE
             </span>
           </div>
@@ -194,7 +186,7 @@ export default function Home() {
             <p className="text-primary uppercase tracking-widest text-xs font-bold mb-2">
               Ready for impact
             </p>
-            <h2 className="font-display text-4xl font-extrabold tracking-tight leading-[0.9] text-foreground">
+            <h2 className="font-display text-4xl font-extrabold leading-[0.9] tracking-tight text-foreground sm:text-5xl">
               HELLO,<br />CHAMPION.
             </h2>
           </div>
@@ -251,10 +243,10 @@ export default function Home() {
           <div className="flex flex-col gap-8">
             {featuredVideo ? (
               <a
-                href={`/train?title=${encodeURIComponent(featuredVideo.title)}&videoSrc=${encodeURIComponent(featuredVideo.videoSrc)}&thumbnail=${encodeURIComponent(featuredVideo.thumbnail)}`}
-                className="bg-surface flex h-52 group cursor-pointer active:scale-[0.98] transition-all rounded-xl overflow-hidden border border-surface-border hover:border-primary/30"
+                href={`/train?title=${encodeURIComponent(featuredVideo.title)}&videoSrc=${encodeURIComponent(featuredVideo.videoSrc)}&thumbnail=${encodeURIComponent(featuredVideo.thumbnail)}&focus=${encodeURIComponent(featuredVideo.coach)}&focus_muscle_ids=${encodeURIComponent(JSON.stringify(featuredVideo.focus_muscle_ids))}`}
+                className="group flex min-h-52 cursor-pointer flex-col overflow-hidden rounded-xl border border-surface-border bg-surface transition-all hover:border-primary/30 active:scale-[0.98] sm:flex-row"
               >
-                <div className="flex-1 p-6 flex flex-col justify-between">
+                <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
                   <div>
                     <div className="inline-block px-2 py-0.5 bg-tertiary text-[10px] text-white font-bold uppercase mb-3 rounded-sm">
                       {featuredVideo.intensity}
@@ -277,7 +269,7 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="w-2/5 relative overflow-hidden">
+                <div className="relative h-48 overflow-hidden sm:h-auto sm:w-2/5">
                   <img
                     alt={featuredVideo.title}
                     className="h-full w-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
@@ -294,12 +286,12 @@ export default function Home() {
         {/* Tutorials Section */}
         <section className="space-y-6">
           <h3 className="font-display text-2xl font-bold uppercase tracking-tighter text-foreground border-b border-surface-border pb-4">Video hướng dẫn mới</h3>
-          <div className="flex overflow-x-auto hide-scrollbar -mx-6 px-6 gap-6">
+          <div className="-mx-4 flex gap-5 overflow-x-auto px-4 sm:-mx-6 sm:gap-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0">
             {visibleTutorialVideos.length > 0 ? visibleTutorialVideos.map((video) => (
               <a
                 key={video.id}
-                href={`/train?title=${encodeURIComponent(video.title)}&videoSrc=${encodeURIComponent(video.videoSrc)}&thumbnail=${encodeURIComponent(video.thumbnail)}`}
-                className="min-w-[280px] space-y-3 group cursor-pointer block"
+                href={`/train?title=${encodeURIComponent(video.title)}&videoSrc=${encodeURIComponent(video.videoSrc)}&thumbnail=${encodeURIComponent(video.thumbnail)}&focus=${encodeURIComponent(video.coach)}&focus_muscle_ids=${encodeURIComponent(JSON.stringify(video.focus_muscle_ids))}`}
+                className="block min-w-[260px] space-y-3 group cursor-pointer sm:min-w-[280px] lg:min-w-0"
               >
                 <div className="aspect-video relative overflow-hidden rounded-lg border border-surface-border">
                   <img
@@ -334,14 +326,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      {/* FAB for Today's Workout */}
-      <button 
-        className="fixed right-6 bottom-24 h-14 w-14 rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-all z-40 text-black hover:opacity-90"
-        style={{ background: `linear-gradient(135deg, var(--primary) 0%, var(--color-primary-container, var(--primary)) 100%)` }}
-      >
-        <span className="material-symbols-outlined font-black text-2xl">play_arrow</span>
-      </button>
     </div>
   );
 }

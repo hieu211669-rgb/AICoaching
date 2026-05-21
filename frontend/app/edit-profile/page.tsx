@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import TopAppBar from '@/components/TopAppBar';
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -21,8 +22,16 @@ export default function EditProfilePage() {
 
   const [avatar, setAvatar] = useState('https://lh3.googleusercontent.com/aida-public/AB6AXuAsGhj5Me3D6EXLgIin4W7DZHXUdeX6nfV_8kM5TLH5hIAiASTZlIESuzoK1lqcIpCwTFNbrhZfkmdpbzyZOhggOG_RixasQqASvSUqaNUNXTpcLDLIIo4TWtafQdrgaJq2y0b4-Pw_3CukSQTqYqV1YmZ7VAGs1MtfEKxLUgyY_nrLWnia3XvGc2_cdPmxq2hlo4D4iwJCBf-7UTh8bV2Epm4UzrGGZyM-dhnR1zCfrHwlEs--c-EsXNphmMSTnjhv1K-p4j2eQsn5');
 
+  const getAvatarUrl = (user: any) => {
+    const url = user?.avatar_url;
+    if (!url) return avatar; // Fallback to current avatar state
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    return `${apiUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   // Load user data from localStorage on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
@@ -33,15 +42,14 @@ export default function EditProfilePage() {
           email: user.email || '',
           weight: user.weight?.toString() || '',
           height: user.height?.toString() || '',
-          // Use defaults for fields not in the basic user model yet
           username: user.username || prev.username,
           mantra: user.mantra || prev.mantra,
           gender: user.gender || prev.gender,
           age: user.age?.toString() || prev.age,
         }));
-        if (user.avatar) {
-          setAvatar(user.avatar);
-        }
+        
+        const avatarUrl = getAvatarUrl(user);
+        setAvatar(avatarUrl);
       } catch (e) {
         console.error('Failed to parse user data:', e);
       }
@@ -66,7 +74,19 @@ export default function EditProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
     // In a real app, you would send this to your backend
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      const updatedUser = {
+        ...user,
+        ...formData,
+        avatar_url: avatar // Assuming avatar state holds the new URL/base64
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+
     console.log('Saving profile:', { ...formData, avatar });
     // Simulate successful save
     router.push('/profile');
@@ -74,23 +94,9 @@ export default function EditProfilePage() {
 
   return (
     <div className="min-h-screen bg-surface text-on-surface overflow-x-hidden pb-20">
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-surface-container-low flex justify-between items-center px-6 py-4 h-16 border-b border-outline-variant/20 backdrop-blur-md">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => router.back()}
-            className="active:scale-95 transition-transform text-primary hover:opacity-80"
-          >
-            <span className="material-symbols-outlined">arrow_back</span>
-          </button>
-          <h1 className="font-headline font-bold text-primary tracking-tighter uppercase text-xl">EDIT PROFILE</h1>
-        </div>
-        <div className="flex items-center">
-          <span className="font-headline font-bold text-primary tracking-tighter uppercase opacity-40 text-xs">VOLT KINETIC</span>
-        </div>
-      </header>
+      <TopAppBar title="EDIT PROFILE" showBack={true} />
 
-      <main className="pt-24 pb-12 px-6 max-w-lg mx-auto">
+      <main className="mx-auto max-w-3xl px-4 pb-12 pt-24 sm:px-6">
         {/* Profile Photo Section */}
         <section className="relative flex flex-col items-center mb-12">
           <div className="relative group">
@@ -119,9 +125,9 @@ export default function EditProfilePage() {
         </section>
 
         {/* Edit Form */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8 md:grid md:grid-cols-2 md:gap-x-8 md:space-y-0">
           {/* Full Name */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:col-span-2 md:mb-8">
             <label className="font-headline text-xs uppercase tracking-widest text-on-surface-variant">Full Name</label>
             <input 
               name="full_name"
@@ -134,7 +140,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Email */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:mb-8">
             <label className="font-headline text-xs uppercase tracking-widest text-on-surface-variant">Email Address</label>
             <input 
               name="email"
@@ -147,7 +153,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Username */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:mb-8">
             <label className="font-headline text-xs uppercase tracking-widest text-on-surface-variant">Username</label>
             <div className="flex items-center border-b border-outline-variant">
               <span className="text-on-surface-variant pr-1">@</span>
@@ -162,7 +168,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Password Section */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:col-span-2 md:mb-8">
             <label className="font-headline text-xs uppercase tracking-widest text-on-surface-variant">Change Password</label>
             <input 
               name="password"
@@ -175,7 +181,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Bio / Mantra */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:col-span-2 md:mb-8">
             <label className="font-headline text-xs uppercase tracking-widest text-on-surface-variant">Performance Mantra</label>
             <textarea 
               name="mantra"
@@ -187,7 +193,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Gender & Age */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:col-span-2 md:mb-8">
             <div className="space-y-1.5">
               <label className="font-headline text-xs uppercase tracking-widest text-on-surface-variant">Gender</label>
               <select 
@@ -215,7 +221,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Metrics: Height & Weight */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:col-span-2 md:mb-8">
             <div className="space-y-1.5">
               <label className="font-headline text-xs uppercase tracking-widest text-on-surface-variant">Weight (KG)</label>
               <input 
@@ -239,7 +245,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Save Button */}
-          <div className="pt-8">
+          <div className="pt-4 md:col-span-2">
             <button 
               className="w-full bg-primary text-on-primary font-headline font-bold py-5 rounded-md uppercase tracking-[0.3em] text-sm flex items-center justify-center gap-3 active:scale-95 transition-transform bg-gradient-to-br from-primary to-primary-container shadow-lg shadow-primary/20" 
               type="submit"
@@ -250,7 +256,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Deactivate Link */}
-          <div className="pt-4 pb-8 flex justify-center">
+          <div className="flex justify-center pb-8 pt-4 md:col-span-2">
             <button className="text-error font-headline text-xs uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity flex items-center gap-2" type="button">
               <span className="material-symbols-outlined text-sm">cancel</span>
               Deactivate Account

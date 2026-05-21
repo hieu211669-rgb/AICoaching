@@ -48,6 +48,7 @@ export default function LoginPage() {
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
+
       // Role-based redirection
       if (data.user.role === 'admin') {
         router.push('/admin');
@@ -62,9 +63,9 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col md:flex-row bg-surface text-on-surface font-body">
+    <main className="flex min-h-screen flex-col bg-surface font-body text-on-surface md:flex-row">
       {/* Visual Anchor Section */}
-      <section className="relative w-full md:w-7/12 h-64 md:h-screen overflow-hidden flex items-end p-8 md:p-16">
+      <section className="relative flex h-72 w-full items-end overflow-hidden p-6 sm:p-8 md:h-screen md:w-7/12 md:p-16">
         <div className="absolute inset-0 z-0">
           <img
             alt="Athletic intensity"
@@ -84,7 +85,7 @@ export default function LoginPage() {
               Volt Kinetic
             </span>
           </div>
-          <h1 className="font-display text-6xl md:text-8xl font-bold leading-[0.8] tracking-tighter text-primary uppercase italic text-shadow-glow">
+          <h1 className="font-display text-5xl font-bold uppercase italic leading-[0.8] tracking-tighter text-primary text-shadow-glow sm:text-6xl md:text-8xl">
             VOLT
           </h1>
           <p className="font-display text-base md:text-2xl font-light tracking-widest text-on-surface-variant mt-4 max-w-md">
@@ -94,11 +95,11 @@ export default function LoginPage() {
       </section>
 
       {/* Auth Section */}
-      <section className="w-full md:w-5/12 bg-surface flex flex-col justify-center px-8 py-12 md:px-20">
+      <section className="flex w-full flex-col justify-center bg-surface px-6 py-10 sm:px-8 md:w-5/12 md:px-12 lg:px-20">
         <div className="max-w-md w-full mx-auto">
           {/* Header */}
-          <div className="mb-12">
-            <h2 className="font-display text-4xl font-bold tracking-tight mb-2">ACCESS PORTAL</h2>
+          <div className="mb-10 sm:mb-12">
+            <h2 className="font-display mb-2 text-3xl font-bold tracking-tight sm:text-4xl">ACCESS PORTAL</h2>
             <p className="text-on-surface-variant font-medium">Verify your credentials to resume training.</p>
           </div>
 
@@ -165,7 +166,7 @@ export default function LoginPage() {
             </div>
 
             {/* Remember & Forgot Password */}
-            <div className="flex items-center justify-between py-2">
+            <div className="flex flex-col gap-4 py-2 sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-3 cursor-pointer group">
                 <div className="relative w-5 h-5 flex items-center justify-center">
                   <input
@@ -184,7 +185,7 @@ export default function LoginPage() {
                 </span>
               </label>
               <Link href="/send-email" className="text-xs font-bold tracking-wider text-primary hover:underline underline-offset-4">
-                RESET ACCESS
+                RESET PASSWORD
               </Link>
             </div>
 
@@ -232,7 +233,7 @@ export default function LoginPage() {
           </div>
 
           {/* Sign Up Link */}
-          <div className="mt-16 text-center">
+          <div className="mt-12 text-center sm:mt-16">
             <p className="text-sm font-medium text-on-surface-variant mb-4">New to the kinetic ecosystem?</p>
             <Link href="/signup" className="inline-flex items-center gap-2 group">
               <span className="font-display font-bold text-lg tracking-tight group-hover:text-primary transition-colors">

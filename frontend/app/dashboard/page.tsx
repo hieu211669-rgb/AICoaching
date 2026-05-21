@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSettings } from '@/context/SettingsContext';
+import TopAppBar from '@/components/TopAppBar';
 
 type MuscleGroup = {
   id: string;
@@ -28,6 +30,7 @@ export default function ExercisesLibrary() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAllGroups, setShowAllGroups] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,25 +92,10 @@ export default function ExercisesLibrary() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 transition-colors duration-500">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 border-b border-surface-border">
-        <div className="flex items-center gap-4">
-          <button className="text-primary cursor-pointer active:scale-95 duration-200">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <h1 className="font-bold tracking-tighter uppercase text-xl text-primary font-display">VOLT KINETIC</h1>
-        </div>
-        <div className="w-8 h-8 rounded-full bg-surface border border-surface-border overflow-hidden">
-          <img
-            className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWl3KN15nyrWALHc3H8CXRvN4F6rWDwGaRLQRF_MKV-adA0DwKMN4gKtYKmRv00fX-MZb7QfJKz1NysFbEC0xkVEMy--o4d_eEwG6Thc_U6H0diq_ClcUtvUI2tAQ4jhISHapPhVvgluuly1CDjIN2OX0sIxdLR-h_bHQuv8BY52lOC8x7obRrGEo-c47ICfZGkAKQFsVSGiOtJHfcKAMXeWHXCLNlm-bC_F_frWytM-YEkz4KgFeJDMz9YThWSVdI7qDgFcb13gu-"
-            alt="Profile"
-          />
-        </div>
-      </header>
+      <TopAppBar />
 
       {/* Main Content */}
-      <main className="pt-20 px-6 max-w-7xl mx-auto">
+      <main className="mx-auto max-w-7xl px-4 pt-20 sm:px-6 lg:px-8">
         {/* Search */}
         <section className="mb-10">
           <div className="relative mb-6">
@@ -139,8 +127,8 @@ export default function ExercisesLibrary() {
 
         {/* Muscle Groups Grid */}
         <section className="mb-12">
-          <div className="flex items-baseline justify-between mb-8">
-            <h2 className="text-3xl font-black uppercase italic font-display">Nhóm cơ chính</h2>
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
+            <h2 className="font-display text-2xl font-black uppercase italic sm:text-3xl">Nhóm cơ chính</h2>
             <div className="flex items-center gap-4">
               {muscleGroups.length > 5 && (
                 <button 
@@ -156,11 +144,12 @@ export default function ExercisesLibrary() {
             </div>
           </div>
 
-          <div className="grid grid-cols-12 gap-4 auto-rows-[220px]">
+          <div className="grid auto-rows-[180px] grid-cols-12 gap-3 sm:auto-rows-[220px] sm:gap-4">
             {visibleMuscleGroups.map((group, idx) => (
               <div
                 key={group.id}
-                className={`relative overflow-hidden rounded-lg group cursor-pointer border border-surface-border ${
+                onClick={() => router.push(`/library?group=${group.name}`)}
+                className={`relative overflow-hidden rounded-lg group cursor-pointer border border-surface-border active:scale-[0.98] transition-all ${
                   group.featured ? 'col-span-12 md:col-span-8' : 'col-span-6 md:col-span-4'
                 }`}
               >
@@ -171,7 +160,7 @@ export default function ExercisesLibrary() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
                 <div className="absolute bottom-6 left-6">
-                  <h3 className={`font-black uppercase text-foreground leading-none font-display ${group.featured ? 'text-5xl' : 'text-2xl'}`}>
+                  <h3 className={`font-display font-black uppercase leading-none text-foreground ${group.featured ? 'text-3xl sm:text-5xl' : 'text-xl sm:text-2xl'}`}>
                     {group.name}
                   </h3>
                   <p className="text-primary text-[10px] font-bold uppercase tracking-widest mt-2">
@@ -189,7 +178,7 @@ export default function ExercisesLibrary() {
         {/* Featured Exercises */}
         <section className="mb-20">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-black uppercase italic font-display">Bài tập phổ biến</h2>
+            <h2 className="font-display text-xl font-black uppercase italic sm:text-2xl">Bài tập phổ biến</h2>
             <button className="text-primary text-[10px] font-bold uppercase tracking-widest border-b border-primary/30 hover:border-primary transition-all">
               Xem tất cả
             </button>
@@ -199,20 +188,21 @@ export default function ExercisesLibrary() {
             {displayedExercises.length > 0 ? displayedExercises.map((exercise) => (
               <div
                 key={exercise.id}
-                className="flex items-center bg-surface p-4 rounded-lg group cursor-pointer hover:bg-surface-hover transition-all border border-surface-border hover:border-primary/20"
+                onClick={() => router.push(`/exercise?id=${exercise.id}`)}
+                className="group flex cursor-pointer flex-col gap-4 rounded-lg border border-surface-border bg-surface p-4 transition-all hover:border-primary/20 hover:bg-surface-hover sm:flex-row sm:items-center"
               >
-                <div className="w-16 h-16 bg-background rounded-md overflow-hidden flex-shrink-0">
+                <div className="h-40 w-full flex-shrink-0 overflow-hidden rounded-md bg-background sm:h-16 sm:w-16">
                   <img
                     src={exercise.thumbnail_url}
                     alt={exercise.title}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
                   />
                 </div>
-                <div className="ml-6 flex-grow">
+                <div className="min-w-0 flex-grow sm:ml-2">
                   <h4 className="text-lg font-bold leading-tight uppercase group-hover:text-primary transition-colors font-display">
                     {exercise.title}
                   </h4>
-                  <div className="flex gap-4 mt-1">
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">
                       {getMuscleNames(exercise.primary_muscles)}
                     </span>

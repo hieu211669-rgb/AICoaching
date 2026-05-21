@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Bot, User as UserIcon, Loader2, Sparkles, History, MoreVertical } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
+import TopAppBar from '@/components/TopAppBar';
 
 export default function Coaching() {
   const { settings } = useSettings();
@@ -44,36 +45,18 @@ export default function Coaching() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground transition-colors duration-500 overflow-hidden">
-      {/* Chat Header */}
-      <header className="px-6 h-16 border-b border-surface-border flex justify-between items-center bg-background/80 backdrop-blur-md z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-            <Bot size={22} className="text-primary" />
-          </div>
-          <div>
-            <h1 className="font-display font-black text-lg tracking-tighter uppercase leading-none">KINETIC AI COACH</h1>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Active Processing</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 text-foreground/40">
-          <button className="hover:text-primary transition-colors"><History size={20} /></button>
-          <button className="hover:text-primary transition-colors"><MoreVertical size={20} /></button>
-        </div>
-      </header>
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background text-foreground transition-colors duration-500">
+      <TopAppBar title="KINETIC AI COACH" />
 
       {/* Messages Container */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 hide-scrollbar scroll-smooth"
+        className="hide-scrollbar flex-1 space-y-6 overflow-y-auto p-4 scroll-smooth sm:p-6 md:space-y-8 md:p-12 pt-20"
       >
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] flex gap-4 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border transition-all duration-300 ${
+            <div className={`flex max-w-[92%] gap-3 sm:max-w-[85%] sm:gap-4 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`hidden h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border transition-all duration-300 sm:flex ${
                 m.role === 'user' 
                   ? 'bg-surface border-surface-border' 
                   : 'bg-primary/10 border-primary/20'
@@ -83,7 +66,7 @@ export default function Coaching() {
                   : <Sparkles size={18} className="text-primary" />
                 }
               </div>
-              <div className={`p-5 rounded-2xl transition-all duration-300 ${
+              <div className={`rounded-2xl p-4 transition-all duration-300 sm:p-5 ${
                 m.role === 'user' 
                   ? 'bg-surface text-foreground rounded-tr-none border border-surface-border shadow-sm' 
                   : 'bg-primary text-black font-medium rounded-tl-none shadow-lg shadow-primary/10'
@@ -104,7 +87,7 @@ export default function Coaching() {
       </div>
 
       {/* Input Area */}
-      <div className="p-6 md:p-8 border-t border-surface-border bg-background/80 backdrop-blur-xl shrink-0">
+      <div className="shrink-0 border-t border-surface-border bg-background/80 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto relative group">
           <input
             type="text"
@@ -112,7 +95,7 @@ export default function Coaching() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Describe your goals or ask for a specialized routine..."
-            className="w-full bg-surface border border-surface-border rounded-2xl px-8 py-5 text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none pr-20 shadow-inner placeholder:text-foreground/20 font-medium"
+            className="w-full rounded-2xl border border-surface-border bg-surface px-4 py-4 pr-16 font-medium text-foreground shadow-inner outline-none transition-all placeholder:text-foreground/20 focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-8 sm:py-5 sm:pr-20"
           />
           <button
             onClick={handleSend}

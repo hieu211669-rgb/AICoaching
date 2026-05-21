@@ -24,7 +24,8 @@ from database.mongodb import (
     delete_exercise, get_exercise_by_id, update_exercise,
     add_exercise_tag, get_exercise_tags, remove_exercise_tag,
     add_user_favorite, get_user_favorites, remove_user_favorite,
-    add_workout_history, get_user_workout_history, get_user_stats
+    add_workout_history, get_user_workout_history, get_user_stats,
+    get_exercise_equipment, get_exercise_steps, get_muscle_names_by_ids
 )
 from services.ai_service import get_ai_response
 from auth_utils import get_password_hash, verify_password, create_access_token, SECRET_KEY, ALGORITHM, get_admin_user
@@ -70,10 +71,14 @@ app = FastAPI(
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Storage configuration
@@ -124,16 +129,7 @@ async def login(request: LoginRequest):
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "id": user["id"],
-            "email": user["email"],
-            "full_name": user["full_name"],
-            "role": user["role"],
-            "height": user.get("height"),
-            "weight": user.get("weight"),
-            "body_fat": user.get("body_fat"),
-            "goal": user.get("goal"),
-            "experience_level": user.get("experience_level"),
-            "activity_level": user.get("activity_level")
+            k: v for k, v in user.items() if k != "hashed_password"
         }
     }
 
@@ -142,6 +138,7 @@ async def get_profile(email: str):
     user = await get_user_by_email(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    # user is already serialized by get_user_by_email
     return user
 
 class ProfileUpdate(BaseModel):
@@ -351,18 +348,18 @@ async def fetch_muscle_groups():
         raise HTTPException(status_code=500, detail=str(e))
 
 class ExerciseCreate(BaseModel):
-    exerciseName: str
+    title: str
     exerciseType: str
-    equipment: List[str]
-    targetMuscle: List[str]
-    estBurn: str
-    set_reps: str
-    skillLevel: str
-    referenceVisual: str
-    biomechanicalFocus: str
-    stabillityRequirement: str
-    rangeOfMotion: str
-    timeStamp: str
+    equipments: List[str] = []
+    primary_muscles: List[str] = []
+    calories_burn: str = ""
+    set_reps: str = ""
+    difficulty: str = ""
+    referenceVisual: str = ""
+    biomechanicalFocus: str = ""
+    stabillityRequirement: str = ""
+    rangeOfMotion: str = ""
+    timeStamp: str = ""
     views: Optional[int] = None
 
 @app.post("/api/admin/exercises")
@@ -387,6 +384,41 @@ async def fetch_all_exercises_public():
     """
     try:
         return await get_all_exercises()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/exercises/{exercise_id}")
+async def fetch_exercise_public(exercise_id: str):
+    """
+    Endpoint for users to fetch a single exercise.
+    """
+    try:
+        exercise = await get_exercise_by_id(exercise_id)
+        if not exercise:
+            raise HTTPException(status_code=404, detail="Exercise not found")
+        return exercise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/exercises/{exercise_id}/equipment")
+async def fetch_exercise_equipment(exercise_id: str):
+    try:
+        return await get_exercise_equipment(exercise_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/exercises/{exercise_id}/steps")
+async def fetch_exercise_steps(exercise_id: str):
+    try:
+        return await get_exercise_steps(exercise_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/muscles/names")
+async def fetch_muscle_names(body: dict):
+    try:
+        ids = body.get("ids", [])
+        return await get_muscle_names_by_ids(ids)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

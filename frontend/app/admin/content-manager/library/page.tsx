@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Video, Loader2, AlertCircle, CheckCircle2, Trash2, X } from 'lucide-react';
-import { useSettings } from '@/context/SettingsContext';
 
 interface VideoAsset {
   id: string | number;
@@ -17,9 +16,33 @@ interface VideoAsset {
   fileInfo: string;
 }
 
+interface ApiVideo {
+  id?: string | number;
+  _id?: string | number;
+  title?: string;
+  intensity?: string;
+  thumbnail?: string;
+  duration?: string;
+  date?: string;
+  focus?: string;
+}
+
+interface ApiError {
+  detail?: string;
+  message?: string;
+}
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const fallbackThumbnail = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop';
+
+const getErrorMessage = (err: unknown, fallback = 'Unexpected error') => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  return fallback;
+};
+
 export default function LibraryPage() {
   const router = useRouter();
-  const { settings } = useSettings();
   const [selectedFilter, setSelectedFilter] = useState('All Content');
   const [searchQuery, setSearchQuery] = useState('');
   const [videos, setVideos] = useState<VideoAsset[]>([]);
@@ -45,13 +68,13 @@ export default function LibraryPage() {
     const fetchVideos = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:8000/api/videos');
+        const response = await fetch(`${apiUrl}/api/videos`);
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        const data = await response.json();
+        const data = (await response.json()) as ApiVideo[];
         
-        const mappedVideos = data.map((video: any) => {
+        const mappedVideos = data.map((video, index): VideoAsset => {
           let formattedDate = 'Recently';
           if (video.date) {
             try {
@@ -60,16 +83,16 @@ export default function LibraryPage() {
                 month: 'short', 
                 day: 'numeric' 
               });
-            } catch (e) {
+            } catch {
               formattedDate = 'Recently';
             }
           }
 
           return {
-            id: video.id || video._id,
+            id: video.id ?? video._id ?? `video-${index}`,
             title: video.title || 'Untitled Video',
             category: video.intensity || 'Strength',
-            thumbnail: video.thumbnail || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop',
+            thumbnail: video.thumbnail || fallbackThumbnail,
             duration: video.duration || '00:00',
             date: formattedDate,
             uploader: 'Coach Admin',
@@ -80,9 +103,9 @@ export default function LibraryPage() {
         
         setVideos(mappedVideos);
         setError(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch videos:', err);
-        setError(err.message);
+        setError(getErrorMessage(err, 'Failed to fetch videos'));
       } finally {
         setLoading(false);
       }
@@ -96,7 +119,7 @@ export default function LibraryPage() {
 
     setIsDeleting(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/videos/${deleteConfirm.id}`, {
+      const res = await fetch(`${apiUrl}/api/videos/${deleteConfirm.id}`, {
         method: 'DELETE',
       });
 
@@ -104,12 +127,12 @@ export default function LibraryPage() {
         setVideos(prev => prev.filter(v => v.id !== deleteConfirm.id));
         setNotification({ message: `Successfully deleted "${deleteConfirm.title}"`, type: 'success' });
       } else {
-        const err = await res.json();
-        throw new Error(err.detail || 'Delete failed');
+        const err = (await res.json()) as ApiError;
+        throw new Error(err.detail || err.message || 'Delete failed');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setNotification({ message: `Error: ${err.message}`, type: 'error' });
+      setNotification({ message: `Error: ${getErrorMessage(err, 'Delete failed')}`, type: 'error' });
     } finally {
       setIsDeleting(false);
       setDeleteConfirm(null);
@@ -177,7 +200,7 @@ export default function LibraryPage() {
               </div>
               <h3 className="text-2xl font-display font-bold mb-2 uppercase tracking-tight text-foreground">Confirm Deletion</h3>
               <p className="text-foreground/60 text-sm mb-8 leading-relaxed">
-                Are you sure you want to permanently remove <span className="text-foreground font-bold">"{deleteConfirm.title}"</span>? This action cannot be reversed within the neural archive.
+                Are you sure you want to permanently remove <span className="text-foreground font-bold">&quot;{deleteConfirm.title}&quot;</span>? This action cannot be reversed within the neural archive.
               </p>
               <div className="flex gap-3 w-full">
                 <button 
@@ -299,6 +322,7 @@ export default function LibraryPage() {
           >
             {/* Thumbnail */}
             <div className="relative h-40 overflow-hidden bg-black">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={video.thumbnail}
                 alt={video.title}

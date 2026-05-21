@@ -70,8 +70,9 @@ async def get_user_by_email(email: str):
     try:
         user = await db.users.find_one({"email": email})
         if user:
-            user["id"] = str(user["_id"])
-        return user
+            # Convert ObjectId to string and handle other non-serializable fields
+            return serialize_mongo_value(user)
+        return None
     except Exception as e:
         print(f"❌ Lỗi lấy user: {e}")
         return None
@@ -110,10 +111,14 @@ async def get_all_exercises():
 async def get_exercise_by_id(exercise_id: str):
     try:
         from bson import ObjectId
-        ex = await db.exercises.find_one({"_id": ObjectId(exercise_id)})
+        ex = None
+        if ObjectId.is_valid(exercise_id):
+            ex = await db.exercises.find_one({"_id": ObjectId(exercise_id)})
+        if not ex:
+            ex = await db.exercises.find_one({"_id": exercise_id})
         if ex:
-            ex["id"] = str(ex.pop("_id"))
-        return ex
+            return serialize_mongo_value(ex)
+        return None
     except Exception as e:
         print(f"❌ Lỗi lấy bài tập: {e}")
         return None
@@ -353,3 +358,53 @@ async def get_user_stats(user_id: str):
     except Exception as e:
         print(f"❌ Lỗi tính stats: {e}")
         return {"weekly_volume": 0, "daily_volumes": [0]*7, "streak": 0}
+
+async def get_exercise_equipment(exercise_id: str):
+    try:
+        # Try from exercise_equipments junction table
+        eid_variants = [exercise_id]
+        if ObjectId.is_valid(exercise_id):
+            eid_variants.append(ObjectId(exercise_id))
+        links = await db.exercise_equipments.find({"exercise_id": {"$in": eid_variants}}).to_list(100)
+        eq_ids = [link["equipment_id"] for link in links]
+
+        # Fallback: get from exercise document's equipments array
+        if not eq_ids:
+            ex = await get_exercise_by_id(exercise_id)
+            if ex and ex.get("equipments"):
+                raw_ids = ex["equipments"]
+                eq_ids = [ObjectId(eid) if ObjectId.is_valid(eid) else eid for eid in raw_ids]
+
+        if not eq_ids:
+            return []
+        # Normalize eq_ids for query
+        query_ids = []
+        for eid in eq_ids:
+            query_ids.append(eid)
+            if isinstance(eid, str) and ObjectId.is_valid(eid):
+                query_ids.append(ObjectId(eid))
+        equipments = await db.equipments.find({"_id": {"$in": query_ids}}).to_list(100)
+        return [serialize_mongo_value(eq) for eq in equipments]
+    except Exception as e:
+        print(f"❌ Lỗi lấy thiết bị bài tập: {e}")
+        return []
+
+async def get_exercise_steps(exercise_id: str):
+    try:
+        doc = await db.exerciseSteps.find_one({"exercise_id": exercise_id})
+        if doc and "steps" in doc:
+            return doc["steps"]
+        return []
+    except Exception as e:
+        print(f"❌ Lỗi lấy exercise steps: {e}")
+        return []
+
+async def get_muscle_names_by_ids(muscle_ids: list):
+    try:
+        obj_ids = [ObjectId(mid) for mid in muscle_ids if ObjectId.is_valid(mid)]
+        str_ids = muscle_ids
+        muscles = await db.muscle_groups.find({"$or": [{"_id": {"$in": obj_ids}}, {"_id": {"$in": str_ids}}]}).to_list(100)
+        return [m.get("name", "") for m in muscles]
+    except Exception as e:
+        print(f"❌ Lỗi lấy tên nhóm cơ: {e}")
+        return []

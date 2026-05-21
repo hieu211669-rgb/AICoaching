@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Check, Zap, Lock, BarChart3 } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
+import TopAppBar from '@/components/TopAppBar';
 
 export default function Plans() {
   const { settings } = useSettings();
@@ -53,32 +54,15 @@ export default function Plans() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-32 transition-colors duration-500">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-surface/80 backdrop-blur-xl border-b border-surface-border">
-        <div className="flex items-center gap-4">
-          <button className="text-primary cursor-pointer active:scale-95 duration-200">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <h1 className="text-xl font-black text-primary tracking-tighter uppercase font-display">
-            VOLT KINETIC
-          </h1>
-        </div>
-        <div className="w-8 h-8 rounded-full overflow-hidden border border-surface-border">
-          <img
-            alt="Athlete Profile"
-            className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZSjI5Mj0h7qM5OjduxOHnmUu7_ee9DtD7yBIDhHbjO2FCL7Y_D15DPvhtO0S6EcY7WLXi8uoAJxE5NLbPUS4IZmX0dCB2WLtWjc0AleFwUDGXFuOXU3vM6paJOF-YV1czsTqUf9o44Lt4JBhS7G6XKMS84kQCIbIyMZpvaa-5odDmurER7XIbijxBSisqgy1VGAx-0coBI1XEBI5bOD7DgEfSFyugqu2-6JX2kVqUn3FHz9q4XWjwmh1VYSbzVW5KRvCdB459NgK6"
-          />
-        </div>
-      </header>
+      <TopAppBar />
 
-      <main className="pt-24 px-6 max-w-5xl mx-auto space-y-12">
+      <main className="mx-auto max-w-5xl space-y-12 px-4 pt-24 sm:px-6 md:pb-12">
         {/* Weekly Calendar Section */}
         <section>
-          <div className="flex justify-between items-end mb-6">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <span className="text-primary font-bold tracking-wider text-xs uppercase">Current Phase</span>
-              <h2 className="text-4xl font-black tracking-tighter mt-1 italic font-display text-foreground uppercase">WEEK 04: PEAK</h2>
+              <h2 className="font-display mt-1 text-3xl font-black uppercase italic tracking-tighter text-foreground sm:text-4xl">WEEK 04: PEAK</h2>
             </div>
             <div className="text-right">
               <span className="text-foreground/40 text-[10px] uppercase tracking-[0.2em]">Completion</span>
@@ -87,11 +71,11 @@ export default function Plans() {
           </div>
 
           {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
             {weekDays.map((day, idx) => (
               <div
                 key={idx}
-                className={`flex flex-col items-center py-4 rounded-lg border-b-2 transition-all duration-300 ${
+                className={`flex min-w-0 flex-col items-center rounded-lg border-b-2 py-3 transition-all duration-300 sm:py-4 ${
                   day.isToday
                     ? 'bg-surface border-tertiary shadow-lg'
                     : day.completed
@@ -126,7 +110,7 @@ export default function Plans() {
         {/* Today's Workout List */}
         <section>
           <div className="flex items-center gap-4 mb-8">
-            <h3 className="text-2xl font-black tracking-tight font-display uppercase">TODAY'S ARSENAL</h3>
+            <h3 className="font-display text-xl font-black uppercase tracking-tight sm:text-2xl">TODAY'S ARSENAL</h3>
             <div className="h-[2px] flex-grow bg-surface-border/20 relative">
               <div className="absolute left-0 top-0 h-full w-1/3 bg-tertiary"></div>
             </div>
@@ -137,13 +121,13 @@ export default function Plans() {
             {todayWorkouts.map((workout, idx) => (
               <div
                 key={workout.id}
-                className={`relative group bg-surface overflow-hidden rounded-lg flex border-l-4 transition-all duration-300 border-surface-border ${
+                className={`group relative flex overflow-hidden rounded-lg border-l-4 border-surface-border bg-surface transition-all duration-300 ${
                   workout.completed
                     ? 'border-l-primary opacity-100'
                     : 'border-l-transparent hover:border-l-tertiary opacity-80'
                 }`}
               >
-                <div className="flex-grow p-6">
+                <div className="min-w-0 flex-grow p-4 sm:p-6">
                   <div className="flex items-center gap-2 mb-2">
                     <span
                       className={`text-[10px] px-2 py-0.5 font-bold rounded uppercase ${
@@ -155,8 +139,8 @@ export default function Plans() {
                       {workout.category}
                     </span>
                   </div>
-                  <h4 className="text-2xl font-black mb-1 font-display uppercase">{workout.name}</h4>
-                  <div className="flex gap-6 mt-4">
+                  <h4 className="font-display mb-1 text-xl font-black uppercase sm:text-2xl">{workout.name}</h4>
+                  <div className="mt-4 flex flex-wrap gap-5 sm:gap-6">
                     <div>
                       <p className="text-[10px] text-foreground/40 uppercase tracking-widest font-bold">Sets</p>
                       <p className="text-xl font-black">{workout.sets}</p>
@@ -172,7 +156,7 @@ export default function Plans() {
                   </div>
                 </div>
 
-                <div className="w-32 md:w-48 relative overflow-hidden shrink-0">
+                <div className="relative hidden w-32 shrink-0 overflow-hidden sm:block md:w-48">
                   <img
                     alt={workout.name}
                     className={`w-full h-full object-cover transition-all duration-500 ${
@@ -197,9 +181,9 @@ export default function Plans() {
 
         {/* Metrics & Tracking */}
         <section className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="md:col-span-2 bg-surface p-8 rounded-xl relative overflow-hidden border border-surface-border">
+          <div className="relative overflow-hidden rounded-xl border border-surface-border bg-surface p-5 sm:p-8 md:col-span-2">
             <div className="relative z-10">
-              <div className="flex justify-between items-start mb-12">
+              <div className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="text-xl font-black tracking-tight font-display uppercase">KINETIC METRICS</h3>
                   <p className="text-foreground/40 text-xs mt-1 uppercase font-bold tracking-widest">Weight Progress (kg) • Last 30 Days</p>
@@ -255,7 +239,7 @@ export default function Plans() {
           </div>
 
           {/* Body Fat Card */}
-          <div className="bg-primary p-8 rounded-xl flex flex-col justify-between shadow-lg shadow-primary/10">
+          <div className="flex flex-col justify-between rounded-xl bg-primary p-6 shadow-lg shadow-primary/10 sm:p-8">
             <BarChart3 size={40} className="text-black/40" />
             <div>
               <h3 className="text-black font-black text-3xl tracking-tighter leading-none mb-2 font-display uppercase italic">
@@ -275,7 +259,7 @@ export default function Plans() {
 
       {/* FAB Button */}
       <button 
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-all text-black font-black text-2xl hover:opacity-90"
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full text-2xl font-black text-black shadow-2xl transition-all hover:opacity-90 active:scale-90"
         style={{ background: `linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%)` }}
       >
         +

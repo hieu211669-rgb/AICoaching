@@ -147,10 +147,13 @@ const Sidebar: React.FC = () => {
           <span className="material-symbols-outlined">help</span>
           <span>Support</span>
         </Link>
-        <Link href="/" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-primary transition-colors duration-200 rounded-md">
+        <button
+          onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login'; }}
+          className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-primary transition-colors duration-200 rounded-md w-full"
+        >
           <span className="material-symbols-outlined">logout</span>
           <span>Sign Out</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

@@ -88,7 +88,7 @@ export default function SignupPage() {
         </section>
 
         {/* Right Column: Registration Form */}
-        <section className="flex-grow flex items-center justify-center p-6 md:p-12 lg:p-24 bg-background">
+        <section className="flex flex-grow items-center justify-center bg-background p-4 py-12 sm:p-6 md:p-12 lg:p-24">
           <div className="w-full max-w-md space-y-12">
             <header className="space-y-2">
               <div className="md:hidden flex items-center gap-2 mb-6">
@@ -99,7 +99,7 @@ export default function SignupPage() {
                 <span className="text-xs font-headline font-bold tracking-[0.2em] text-primary uppercase">Step 01 / 03</span>
                 <div className="h-[1px] flex-grow bg-outline-variant/30"></div>
               </div>
-              <h1 className="font-headline text-5xl md:text-6xl font-extrabold tracking-tighter uppercase leading-none">
+              <h1 className="font-headline text-4xl font-extrabold uppercase leading-none tracking-tighter sm:text-5xl md:text-6xl">
                 JOIN THE <br/><span className="text-white/40">ELITE</span>
               </h1>
             </header>
@@ -178,9 +178,9 @@ export default function SignupPage() {
               </div>
 
               {/* CTA Section */}
-              <div className="pt-6 space-y-6">
+              <div className="space-y-6 pt-6">
                 <button 
-                  className="kinetic-gradient w-full py-5 rounded-lg flex items-center justify-between px-8 text-on-primary font-headline font-black text-lg tracking-widest uppercase active:scale-[0.98] transition-transform disabled:opacity-50" 
+                  className="kinetic-gradient flex w-full items-center justify-between gap-4 rounded-lg px-5 py-5 font-headline text-base font-black uppercase tracking-widest text-on-primary transition-transform active:scale-[0.98] disabled:opacity-50 sm:px-8 sm:text-lg" 
                   type="submit"
                   disabled={loading}
                 >
@@ -190,20 +190,8 @@ export default function SignupPage() {
                 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <p className="text-on-surface-variant text-xs font-body">
-                    ALREADY RECRUITED? <Link className="text-white hover:text-primary transition-colors font-bold underline underline-offset-4 decoration-primary/30" href="/login">LOGIN HERE</Link>
+                    Have an account already? <Link className="text-white hover:text-primary transition-colors font-bold underline underline-offset-4 decoration-primary/30" href="/login">LOGIN HERE</Link>
                   </p>
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 bg-surface-container-highest rounded-full flex items-center justify-center cursor-pointer hover:bg-surface-bright transition-colors border border-outline-variant/10">
-                      <img 
-                        alt="Google" 
-                        className="w-5 h-5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc7hlQXchIB4hI98A-SYnKVpeXLSxJF-6gqd6So-uZpNbSmOK-HebzVm9nPmTheFqM8AlYqfDuR7ZzCW8eaDF8_cVB9TukaWzTrGFh2qigTMvaGwpfY-VReRvLqnGlucxKFfsD6rWHj82ecbVRGUXCMZtkoGWsGf93bjiSzXJ0OtDWR4bsVlhlSHTfrnA_fRfZRiSkugKU5PebO9nkRWGqTrtU7xdEqpYapzeqgiGegYi7LPVQJTcnckvo9aM-nb0034h_fwbL2Htz"
-                      />
-                    </div>
-                    <div className="w-10 h-10 bg-surface-container-highest rounded-full flex items-center justify-center cursor-pointer hover:bg-surface-bright transition-colors border border-outline-variant/10">
-                      <span className="material-symbols-outlined text-xl text-white/50 hover:text-white">ios</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </form>

@@ -12,6 +12,11 @@ function NewExerciseForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const exerciseId = searchParams.get('id');
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -41,16 +46,16 @@ function NewExerciseForm() {
       const fetchExercise = async () => {
         try {
           setFetching(true);
-          const response = await fetch(`http://localhost:8000/api/admin/exercises/${exerciseId}`);
+          const response = await fetch(`${apiUrl}/api/admin/exercises/${exerciseId}`, { headers: getAuthHeaders() });
           if (response.ok) {
             const data = await response.json();
-            setExerciseName(data.exerciseName);
+            setExerciseName(data.title);
             setExerciseType(data.exerciseType);
-            setSelectedEquipment(data.equipment);
-            setTargetMuscles(data.targetMuscle);
-            setEstBurn(data.estBurn);
+            setSelectedEquipment(data.equipments || []);
+            setTargetMuscles(data.primary_muscles || []);
+            setEstBurn(data.calories_burn);
             setSetReps(data.set_reps);
-            setSkillLevel(data.skillLevel);
+            setSkillLevel(data.difficulty);
             setReferenceVisual(data.referenceVisual);
             setRangeOfMotion(data.rangeOfMotion);
             setStabilityRequirement(data.stabillityRequirement);
@@ -120,8 +125,9 @@ function NewExerciseForm() {
       if (selectedFile) {
         const formData = new FormData();
         formData.append('file', selectedFile);
-        const uploadRes = await fetch('http://localhost:8000/api/admin/upload-image', {
+        const uploadRes = await fetch(`${apiUrl}/api/admin/upload-image`, {
           method: 'POST',
+          headers: getAuthHeaders(),
           body: formData,
         });
         if (!uploadRes.ok) throw new Error('Failed to upload image');
@@ -130,29 +136,29 @@ function NewExerciseForm() {
       }
 
       const exerciseData = {
-        exerciseName,
+        title: exerciseName,
         exerciseType,
-        equipment: selectedEquipment,
-        targetMuscle: targetMuscles,
-        estBurn,
+        equipments: selectedEquipment,
+        primary_muscles: targetMuscles,
+        calories_burn: estBurn,
         set_reps: setReps,
-        skillLevel,
+        difficulty: skillLevel,
         referenceVisual: finalVisualUrl,
         biomechanicalFocus,
         stabillityRequirement: stabilityRequirement,
         rangeOfMotion,
-        timeStamp // Current time as entry time
+        timeStamp
       };
 
       const url = exerciseId 
-        ? `http://localhost:8000/api/admin/exercises/${exerciseId}` 
-        : 'http://localhost:8000/api/admin/exercises';
+        ? `${apiUrl}/api/admin/exercises/${exerciseId}` 
+        : `${apiUrl}/api/admin/exercises`;
       
       const method = exerciseId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(exerciseData),
       });
 

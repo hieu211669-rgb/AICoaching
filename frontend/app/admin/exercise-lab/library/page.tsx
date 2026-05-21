@@ -133,26 +133,30 @@ export default function ExerciseLibraryPage() {
   const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState('All');
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const fetchExercises = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${apiUrl}/api/admin/exercises`);
+      const response = await fetch(`${apiUrl}/api/admin/exercises`, { headers: getAuthHeaders() });
       if (response.ok) {
         const data = await response.json();
         // Map backend fields to frontend type
         const mappedExercises: Exercise[] = data.map((ex: any) => ({
           id: ex.id,
-          name: ex.exerciseName,
+          name: ex.title,
           type: ex.exerciseType,
-          muscles: Array.isArray(ex.targetMuscle) ? ex.targetMuscle.join(', ') : ex.targetMuscle,
-          equipment: Array.isArray(ex.equipment) ? ex.equipment.join(', ') : ex.equipment,
-          calories: ex.estBurn ? (String(ex.estBurn).includes('kcal') ? ex.estBurn : `${ex.estBurn} kcal`) : '0 kcal',
+          muscles: Array.isArray(ex.primary_muscles) ? ex.primary_muscles.join(', ') : ex.primary_muscles,
+          equipment: Array.isArray(ex.equipments) ? `${ex.equipments.length} items` : '0 items',
+          calories: ex.calories_burn ? (String(ex.calories_burn).includes('kcal') ? ex.calories_burn : `${ex.calories_burn} kcal`) : '0 kcal',
           setsReps: ex.set_reps,
-          status: 'Ready', // Default for now
-          level: ex.skillLevel,
+          status: 'Ready',
+          level: ex.difficulty,
           image: ex.referenceVisual,
-          imageAlt: `Visual for ${ex.exerciseName}`,
+          imageAlt: `Visual for ${ex.title}`,
           views: ex.views || 0,
         }));
         setExercises(mappedExercises);
@@ -167,7 +171,7 @@ export default function ExerciseLibraryPage() {
   useEffect(() => {
     const fetchMuscleGroups = async () => {
       try {
-        const response = await fetch(`${apiUrl}/api/admin/muscle-groups`);
+        const response = await fetch(`${apiUrl}/api/admin/muscle-groups`, { headers: getAuthHeaders() });
         if (response.ok) {
           const data = (await response.json()) as MuscleGroup[];
           setMuscleGroups(data.filter((group) => Boolean(group.name)));
@@ -187,6 +191,7 @@ export default function ExerciseLibraryPage() {
     try {
       const response = await fetch(`${apiUrl}/api/admin/exercises/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (response.ok) {

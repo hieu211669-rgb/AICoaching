@@ -1,67 +1,122 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Play, Timer, Bolt, School, ChevronDown, PlayCircle } from 'lucide-react';
+import { Play, Timer, Bolt, School, ChevronDown, PlayCircle } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
+import TopAppBar from '@/components/TopAppBar';
 
-export default function WorkoutDetail() {
+type VideoData = {
+  title: string;
+  videoSrc: string;
+  thumbnail: string;
+  focus: string;
+  focus_muscle_ids: string[];
+};
+
+type RelatedWorkout = {
+  id: string;
+  title: string;
+  category: string;
+  duration: string;
+  intensity: string;
+  thumbnail: string;
+  color: string;
+  focus: string;
+  focus_muscle_ids: string[];
+  videoSrc: string;
+};
+
+type MuscleGroup = {
+  id: string;
+  name: string;
+};
+
+function WorkoutDetailContent() {
   const { settings } = useSettings();
   const searchParams = useSearchParams();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [videoData, setVideoData] = useState<any>(null);
+  const [videoData, setVideoData] = useState<VideoData | null>(null);
+  const [relatedWorkouts, setRelatedWorkouts] = useState<RelatedWorkout[]>([]);
+  const [muscleGroups, setMuscleGroups] = useState<MuscleGroup[]>([]);
   
   useEffect(() => {
     const title = searchParams.get('title');
     const videoSrc = searchParams.get('videoSrc');
     const thumbnail = searchParams.get('thumbnail');
+    const focus = searchParams.get('focus') || '';
+    const focusMuscleIdsStr = searchParams.get('focus_muscle_ids');
+    
+    let focusMuscleIds: string[] = [];
+    if (focusMuscleIdsStr) {
+      try {
+        focusMuscleIds = JSON.parse(focusMuscleIdsStr);
+      } catch (e) {
+        console.error('Failed to parse focus_muscle_ids:', e);
+      }
+    }
     
     if (title && videoSrc && thumbnail) {
-      setVideoData({ title, videoSrc, thumbnail });
+      setVideoData({ title, videoSrc, thumbnail, focus, focus_muscle_ids: focusMuscleIds });
+      fetchData(focusMuscleIds, title);
     }
   }, [searchParams]);
 
-  const relatedWorkouts = [
-    {
-      id: 1,
-      title: 'EXPLOSIVE POWER CLEANS',
-      category: 'Conditioning',
-      duration: '18 MIN',
-      intensity: 'INTENSE',
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-d18TH05tzfoeci-pz2thImd7sMHm1dBTYVwJu6TdXeaC6Kffh__wGfX2wi3oiH18q-Pi6NJY51yfPbOp9p_QR17cxsj1wK_KvSbxb9QSFSrffA4JOLbvi6p6jc-PfniqBvWyyclorVyDicitI5Q0YI53Tl-_WnKwfMSYB5oWNIju5TQSEZZth535GHC6Y3egN5s-keFjNKU77aXSP_v3lUuQro9qbf62YL3g9IWdU8kfvfuqNICAJ_9-3e3EhVTLPr1PruZ4Sp82',
-      color: 'text-tertiary'
-    },
-    {
-      id: 2,
-      title: 'ISO-LATERAL SHOULDER PRESS',
-      category: 'Strength',
-      duration: '32 MIN',
-      intensity: 'MODERATE',
-      thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD2iTzOKjECTPYCrqJhxsMy0MuNwIvRy0OZ0kwD4vqXNGb4zgDq2uLmVAwvF3fxr-BPvtXfsRJDeNbHkQ8K1IgyhZs2Ofw9yNp-NRfcgPjwb1Qo4vcZym3KBHPt0UTk-T6Xh_GEGfDnLWTA5kYpzEP6m2pImmRUuOZHWpf1XHz-UpX3dEDkXEwH5C8xpJKBtXvZc1RzoA-9GGTwJKPcrPjZ1HLmOibdi2zCrPXkpxcvBtfNdd28mpavl-7fJrxHABZHmj6NMajgi5I1',
-      color: 'text-primary'
+  const fetchData = async (currentMuscleIds: string[], currentTitle: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
+      // Fetch both videos and muscle groups in parallel
+      const [videoRes, muscleRes] = await Promise.all([
+        fetch(`${apiUrl}/api/videos`),
+        fetch(`${apiUrl}/api/muscle-groups`)
+      ]);
+
+      if (muscleRes.ok) {
+        const muscleData = await muscleRes.json();
+        setMuscleGroups(muscleData);
+      }
+
+      if (videoRes.ok) {
+        const data = await videoRes.json();
+        const filtered = data
+          .filter((v: any) => {
+            if (v.title === currentTitle) return false;
+            
+            // Check if there's any intersection between focus_muscle_ids
+            const vMuscleIds = v.focus_muscle_ids || [];
+            return currentMuscleIds.some(id => vMuscleIds.includes(id));
+          })
+          .map((v: any) => ({
+            id: v.id || v.title,
+            title: v.title,
+            category: v.intensity || 'Featured',
+            duration: v.duration || 'HD',
+            intensity: v.intensity || 'Medium',
+            thumbnail: v.thumbnail || v.thumbnail_url,
+            color: v.intensity === 'High' ? 'text-tertiary' : 'text-primary',
+            focus: v.focus,
+            focus_muscle_ids: v.focus_muscle_ids || [],
+            videoSrc: v.url || v.video_url
+          }));
+        setRelatedWorkouts(filtered);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
     }
-  ];
+  };
+
+  const getMuscleNames = (ids: string[]) => {
+    if (!ids || ids.length === 0) return '';
+    return ids
+      .map(id => muscleGroups.find(g => g.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-500 pb-28">
-      {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-surface-border flex justify-between items-center px-6 h-16">
-        <div className="flex items-center gap-4">
-          <button className="text-primary active:scale-95 duration-200 hover:bg-surface p-2 rounded-lg">
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="font-display font-bold text-primary tracking-tighter text-xl uppercase">
-            VOLT KINETIC
-          </h1>
-        </div>
-        <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-          <img
-            alt="Profile"
-            className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwz4l7SW63mGkRooml2bpsa_kAudobh4BpRf-wIHi9_qz73Sv_dpZxvCG1GBjB7BZX6E1shFgyROu7EaUtcdh50E_waTPy49-0Itc9CBnUHk_o7PF-x8_tRYVM85YJbEmk4lMXquaMUEenFgcq_r1Kdw2loJ9jiVLD-VU2Wz8TfZrDkf2zk9cyYgGu2DYUY7kgYKPCkDTOziVuV1dQ4EcGydor-XpHzJQxVZBtjGVJl8uK8IQKg5SNBdiEdJYJs2xAv7vQ4tnarsVG"
-          />
-        </div>
-      </header>
+      <TopAppBar />
 
       <main className="pt-16">
         {/* Video Player Section */}
@@ -98,20 +153,20 @@ export default function WorkoutDetail() {
         </section>
 
         {/* Content */}
-        <div className="px-6 mt-8 space-y-10">
+        <div className="mx-auto mt-8 max-w-5xl space-y-10 px-4 sm:px-6 lg:px-8">
           <div>
             <span className="text-primary font-display text-[10px] font-bold tracking-widest uppercase">
-              Kinetic Training Module
+              Kinetic Training Module • {getMuscleNames(videoData?.focus_muscle_ids || []) || videoData?.focus}
             </span>
-            <h2 className="text-4xl font-display font-bold text-foreground tracking-tighter leading-none uppercase italic mt-1">
+            <h2 className="font-display mt-1 text-3xl font-bold uppercase italic leading-none tracking-tighter text-foreground sm:text-4xl">
               {videoData?.title || 'System Loading...'}
             </h2>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="bg-surface p-4 rounded-lg flex flex-col items-center justify-center text-center border border-surface-border">
-              <Timer className="text-primary mb-2" size={20} />
+              <span className="material-symbols-outlined text-primary mb-2">timer</span>
               <span className="text-[10px] text-foreground/40 uppercase tracking-widest font-bold">Time</span>
               <span className="text-lg font-display font-bold text-foreground uppercase">Ready</span>
             </div>
@@ -121,7 +176,7 @@ export default function WorkoutDetail() {
               <span className="text-lg font-display font-bold text-foreground uppercase">High</span>
             </div>
             <div className="bg-surface p-4 rounded-lg flex flex-col items-center justify-center text-center border border-surface-border">
-              <School className="text-primary mb-2" size={20} />
+              <span className="material-symbols-outlined text-primary mb-2">school</span>
               <span className="text-[10px] text-foreground/40 uppercase tracking-widest font-bold">Focus</span>
               <span className="text-lg font-display font-bold text-foreground uppercase">AI</span>
             </div>
@@ -140,11 +195,17 @@ export default function WorkoutDetail() {
 
           {/* Related */}
           <div>
-            <h3 className="text-xl font-display font-bold text-foreground mb-6 uppercase tracking-tighter italic">Recommended Sessions</h3>
+            <h3 className="text-xl font-display font-bold text-foreground mb-6 uppercase tracking-tighter italic">
+              Recommended Sessions
+            </h3>
             <div className="flex flex-col gap-6">
-              {relatedWorkouts.map((workout) => (
-                <div key={workout.id} className="flex gap-4 items-center group cursor-pointer bg-surface p-3 rounded-lg border border-surface-border hover:border-primary/20 transition-all">
-                  <div className="relative w-32 h-20 rounded-md overflow-hidden shrink-0">
+              {relatedWorkouts.length > 0 ? relatedWorkouts.map((workout) => (
+                <a 
+                  key={workout.id} 
+                  href={`/train?title=${encodeURIComponent(workout.title)}&videoSrc=${encodeURIComponent(workout.videoSrc)}&thumbnail=${encodeURIComponent(workout.thumbnail)}&focus=${encodeURIComponent(workout.focus)}&focus_muscle_ids=${encodeURIComponent(JSON.stringify(workout.focus_muscle_ids))}`}
+                  className="group flex cursor-pointer flex-col gap-4 rounded-lg border border-surface-border bg-surface p-3 transition-all hover:border-primary/20 sm:flex-row sm:items-center"
+                >
+                  <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md sm:h-20 sm:w-32">
                     <img
                       alt={workout.title}
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
@@ -154,9 +215,9 @@ export default function WorkoutDetail() {
                       <PlayCircle className="text-white" size={24} />
                     </div>
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex min-w-0 flex-col">
                     <span className={`text-[10px] font-bold tracking-[0.2em] uppercase ${workout.color}`}>
-                      {workout.category}
+                      {getMuscleNames(workout.focus_muscle_ids) || workout.category}
                     </span>
                     <h4 className="text-base font-display font-bold text-foreground leading-tight uppercase">
                       {workout.title}
@@ -165,12 +226,22 @@ export default function WorkoutDetail() {
                       {workout.duration} • {workout.intensity}
                     </span>
                   </div>
-                </div>
-              ))}
+                </a>
+              )) : (
+                <p className="text-foreground/40 text-sm italic">No other videos with common focus found.</p>
+              )}
             </div>
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+export default function WorkoutDetail() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background text-primary flex items-center justify-center font-display uppercase tracking-widest">Loading...</div>}>
+      <WorkoutDetailContent />
+    </Suspense>
   );
 }
